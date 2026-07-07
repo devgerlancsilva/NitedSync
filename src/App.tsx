@@ -11,8 +11,10 @@ import { ReportsView } from './components/ReportsView';
 import { UserManagementView } from './components/UserManagementView';
 import {
   LogOut, Layout, Shield, Briefcase, Users,
-  ClipboardList, BarChart3, Eye, EyeOff, Loader2, AlertCircle,
+  ClipboardList, BarChart3, Eye, EyeOff, Loader2, AlertCircle, MessageSquare
 } from 'lucide-react';
+import { SendMessageModal } from './components/SendMessageModal';
+import { NotificationDropdown } from './components/NotificationDropdown';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 
@@ -137,15 +139,13 @@ function LoginScreen() {
           </form>
         </div>
 
-        {/* Test credentials hint */}
-        <div className="mt-5 text-center">
-          <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">
-            Acesso de teste
+        {/* Footer Credits */}
+        <div className="mt-6 text-center">
+          <p className="text-[11px] font-medium text-slate-500">
+            Developed by Gêrlan Cardoso - Coordenador do Núcleo e Inovação em Tecnologia Educacional - NITED
           </p>
-          <p className="text-[11px] text-slate-500 mt-1">
-            <span className="text-slate-400">teste@nitedsync.com</span>
-            {' '}·{' '}
-            <span className="text-slate-400">teste123</span>
+          <p className="text-[10px] font-bold text-slate-600 mt-1 uppercase tracking-widest">
+            Secretaria Municipal de Educação de Arapiraca/AL
           </p>
         </div>
       </motion.div>
@@ -157,6 +157,7 @@ function LoginScreen() {
 export default function App() {
   const { user, profile, loading, logout } = useAuth();
   const [currentView, setCurrentView] = useState<ViewType>('kanban');
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
 
   // Loading state
   if (loading) {
@@ -212,6 +213,19 @@ export default function App() {
 
           {/* User info + logout */}
           <div className="flex items-center gap-3 shrink-0">
+            {(profile.role === 'admin' || profile.role === 'supervisor') && (
+              <button
+                onClick={() => setIsMessageModalOpen(true)}
+                className="hidden sm:flex items-center gap-2 px-3 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 rounded-xl transition-all"
+                title="Enviar Recado"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Recado</span>
+              </button>
+            )}
+
+            <NotificationDropdown />
+
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/[0.03] rounded-xl border border-white/5">
               <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center", roleConf.bg)}>
                 <RoleIcon className={cn("w-3.5 h-3.5", roleConf.color)} />
@@ -254,6 +268,24 @@ export default function App() {
           </motion.div>
         </AnimatePresence>
       </main>
+
+      {/* Modals */}
+      <SendMessageModal 
+        isOpen={isMessageModalOpen} 
+        onClose={() => setIsMessageModalOpen(false)} 
+      />
+
+      {/* Footer */}
+      <footer className="w-full border-t border-white/5 bg-surface-panel/30 py-6 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+          <p className="text-[11px] font-medium text-slate-500">
+            Desenvolvido pelo Coordenador do Núcleo e Inovação em Tecnologia Educacional - Gêrlan Cardoso
+          </p>
+          <p className="text-[10px] font-bold text-slate-600 mt-1 uppercase tracking-widest">
+            Secretaria Municipal de Educação de Arapiraca/AL
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

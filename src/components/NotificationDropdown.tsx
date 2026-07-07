@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Bell, X, CheckCircle2, AlertCircle, Clock, Trash2 } from 'lucide-react';
+import { Bell, X, CheckCircle2, AlertCircle, Clock, Trash2, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -117,11 +117,17 @@ export const NotificationDropdown: React.FC = () => {
                         <div className="flex gap-4">
                           <div className={cn(
                             "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-lg",
-                            notification.type === 'atribuicao' 
-                              ? "bg-indigo-500/10 text-indigo-400" 
-                              : "bg-amber-500/10 text-amber-400"
+                            notification.type === 'mensagem'
+                              ? "bg-emerald-500/10 text-emerald-400"
+                              : notification.type === 'atribuicao' 
+                                ? "bg-indigo-500/10 text-indigo-400" 
+                                : "bg-amber-500/10 text-amber-400"
                           )}>
-                            {notification.type === 'atribuicao' ? <AlertCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                            {notification.type === 'mensagem' 
+                              ? <MessageSquare className="w-5 h-5" /> 
+                              : notification.type === 'atribuicao' 
+                                ? <AlertCircle className="w-5 h-5" /> 
+                                : <Clock className="w-5 h-5" />}
                           </div>
                           <div className="flex-1">
                             <div className="flex justify-between items-start mb-1">

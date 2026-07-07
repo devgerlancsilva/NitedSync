@@ -38,7 +38,7 @@ export interface Comment {
   createdAt: any;
 }
 
-export type NotificationType = 'atribuicao' | 'prazo_proximo';
+export type NotificationType = 'atribuicao' | 'prazo_proximo' | 'mensagem';
 
 export interface AppNotification {
   id: string;
