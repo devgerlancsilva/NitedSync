@@ -1,0 +1,6 @@
+{
+  "name": "NitedSync",
+  "description": "Uma ferramenta simples e intuitiva para gerenciar o fluxo de atividades do seu setor com colaboração em tempo real.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

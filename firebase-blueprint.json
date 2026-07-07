@@ -1,0 +1,100 @@
+{
+  "entities": {
+    "Activity": {
+      "title": "Atividade",
+      "description": "Uma tarefa ou atividade no fluxo de trabalho.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Título da atividade" },
+        "description": { "type": "string", "description": "Descrição detalhada" },
+        "status": { "type": "string", "enum": ["backlog", "em_execucao", "em_revisao", "finalizado"], "description": "Status atual" },
+        "priority": { "type": "string", "enum": ["baixa", "media", "alta"], "description": "Prioridade da atividade" },
+        "category": { "type": "string", "description": "Categoria da atividade" },
+        "dueDate": { "type": "string", "format": "date", "description": "Prazo para conclusão" },
+        "assigneeId": { "type": "string", "description": "ID do colaborador responsável" },
+        "assigneeName": { "type": "string", "description": "Nome do colaborador responsável" },
+        "assignees": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "uid": { "type": "string" },
+              "name": { "type": "string" }
+            }
+          },
+          "description": "Lista de responsáveis pela tarefa"
+        },
+        "collaborators": { 
+          "type": "array", 
+          "items": {
+            "type": "object",
+            "properties": {
+              "uid": { "type": "string" },
+              "name": { "type": "string" }
+            }
+          },
+          "description": "Lista de colaboradores ajudando na tarefa"
+        },
+        "checklist": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "text": { "type": "string" },
+              "completed": { "type": "boolean" }
+            }
+          },
+          "description": "Sub-tarefas da atividade"
+        },
+        "createdBy": { "type": "string", "description": "ID de quem criou" },
+        "creatorName": { "type": "string", "description": "Nome de quem criou" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Data de criação" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Data da última atualização" }
+      },
+      "required": ["title", "status", "createdBy", "createdAt", "updatedAt"]
+    },
+    "Notification": {
+      "title": "Notificação",
+      "description": "Notificações do sistema para os usuários",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "ID do destinatário" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["atribuicao", "prazo_proximo"] },
+        "activityId": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "message", "type", "read", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "Perfil do Usuário",
+      "description": "Informações de perfil e permissões do usuário",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "supervisor", "colaborador"] },
+        "sector": { "type": "string" }
+      },
+      "required": ["uid", "name", "email", "role", "sector"]
+    }
+  },
+  "firestore": {
+    "/activities/{activityId}": {
+      "schema": "Activity",
+      "description": "Coleção principal de atividades do setor."
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "Notificações individuais dos usuários."
+    },
+    "/profiles/{userId}": {
+      "schema": "UserProfile",
+      "description": "Perfis de usuário e permissões."
+    }
+  }
+}

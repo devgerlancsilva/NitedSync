@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ─── FUNÇÕES DE VALIDAÇÃO ────────────────────────────────────────────────
+    // Verifica se o usuário está logado
+    function isAuth() {
+      return request.auth != null;
+    }
+    
+    // Verifica se o usuário tem o perfil de 'admin' na collection profiles
+    function isAdmin() {
+      return isAuth() && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ─── REGRAS DE ACESSO ────────────────────────────────────────────────────
+
+    // 1. Perfis de Usuários (Profiles)
+    match /profiles/{userId} {
+      // Qualquer usuário logado pode ler a lista de usuários
+      allow read: if isAuth();
+      // Apenas Administradores podem criar, editar ou excluir perfis
+      // Exceção: O próprio usuário pode atualizar seus dados básicos (se necessário no futuro)
+      allow create, update, delete: if isAdmin();
+    }
+
+    // 2. Tarefas do Kanban (Activities)
+    match /activities/{activityId} {
+      // Qualquer um pode ler ou criar tarefas
+      allow read, create: if isAuth();
+      // Qualquer um pode atualizar (mudar status, comentar, assumir)
+      allow update: if isAuth();
+      // APENAS Administradores podem excluir um card do Kanban
+      allow delete: if isAdmin();
+    }
+
+    // 3. Registro Diário (Daily Entries)
+    match /daily_entries/{entryId} {
+      // Qualquer um pode ler (para os relatórios)
+      allow read: if isAuth();
+      // Um usuário só pode criar ou atualizar seus PRÓPRIOS registros
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuth() && resource.data.userId == request.auth.uid;
+    }
+
+    // 4. Configurações e Categorias (Settings)
+    match /settings/{docId} {
+      // Qualquer um pode ler as categorias
+      allow read: if isAuth();
+      // Apenas Administradores podem adicionar/remover categorias
+      allow write: if isAdmin();
+    }
+  }
+}
