@@ -46,6 +46,7 @@ export const KanbanBoard: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<string | 'todas'>('todas');
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const { categories } = useCategories();
 
@@ -92,7 +93,7 @@ export const KanbanBoard: React.FC = () => {
     }
   };
 
-  const handleCreateActivity = async (
+  const handleCreateOrUpdateActivity = async (
     title: string, description: string, priority: ActivityPriority,
     category: string | null, dueDate: string | null,
     assignee: { id: string | null, name: string | null } | null,
@@ -100,36 +101,63 @@ export const KanbanBoard: React.FC = () => {
   ) => {
     if (!user) return;
     try {
-      const docRef = await addDoc(collection(db, 'activities'), {
-        title,
-        description,
-        status: 'backlog',
-        priority,
-        category,
-        dueDate,
-        assigneeId: assignee?.id || null,
-        assigneeName: assignee?.name || null,
-        assignees: assignee?.id ? [{ uid: assignee.id, name: assignee.name! }] : [],
-        collaborators: [],
-        groupId: profile?.groupId || null,
-        checklist,
-        createdBy: user.uid,
-        creatorName: profile?.name || user.displayName || user.email,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+      if (editingActivity) {
+        await updateDoc(doc(db, 'activities', editingActivity.id), {
+          title,
+          description,
+          priority,
+          category,
+          dueDate,
+          assigneeId: assignee?.id || null,
+          assigneeName: assignee?.name || null,
+          assignees: assignee?.id ? [{ uid: assignee.id, name: assignee.name! }] : [],
+          checklist,
+          updatedAt: serverTimestamp(),
+        });
 
-      if (assignee?.id && assignee.id !== user.uid) {
-        await createNotification(
-          assignee.id,
-          'Nova tarefa atribuída',
-          `${profile?.name || user.email} atribuiu a você: ${title}`,
-          'atribuicao',
-          docRef.id
-        );
+        if (assignee?.id && assignee.id !== user.uid && assignee.id !== editingActivity.assigneeId) {
+          await createNotification(
+            assignee.id,
+            'Nova tarefa atribuída',
+            `${profile?.name?.split(' ')[0] || 'Alguém'} atribuiu uma tarefa a você: ${title}`,
+            'assignment',
+            editingActivity.id
+          );
+        }
+      } else {
+        const docRef = await addDoc(collection(db, 'activities'), {
+          title,
+          description,
+          status: 'backlog',
+          priority,
+          category,
+          dueDate,
+          assigneeId: assignee?.id || null,
+          assigneeName: assignee?.name || null,
+          assignees: assignee?.id ? [{ uid: assignee.id, name: assignee.name! }] : [],
+          collaborators: [],
+          groupId: profile?.groupId || null,
+          checklist,
+          createdBy: user.uid,
+          creatorName: profile?.name || user.displayName || user.email,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+
+        if (assignee?.id && assignee.id !== user.uid) {
+          await createNotification(
+            assignee.id,
+            'Nova tarefa atribuída',
+            `${profile?.name || user.email} atribuiu a você: ${title}`,
+            'atribuicao',
+            docRef.id
+          );
+        }
       }
+      setIsModalOpen(false);
+      setEditingActivity(null);
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'activities');
+      handleFirestoreError(error, editingActivity ? OperationType.UPDATE : OperationType.CREATE, 'activities');
     }
   };
 
@@ -192,7 +220,21 @@ export const KanbanBoard: React.FC = () => {
       handleFirestoreError(error, OperationType.UPDATE, `activities/${id}`);
     }
   };
+  const handleLeaveAsHelper = async (id: string) => {
+    if (!user || !profile) return;
+    const activity = activities.find(a => a.id === id);
+    if (!activity) return;
 
+    try {
+      const newCollaborators = (activity.collaborators || []).filter(c => c.uid !== user.uid);
+      await updateDoc(doc(db, 'activities', id), {
+        collaborators: newCollaborators,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `activities/${id}`);
+    }
+  };
   const handleToggleChecklistItem = async (activityId: string, itemId: string) => {
     const activity = activities.find(a => a.id === activityId);
     if (!activity || !activity.checklist) return;
@@ -226,12 +268,13 @@ export const KanbanBoard: React.FC = () => {
       const isInvolved = activity.assignees?.some(a => a.uid === user?.uid) || activity.createdBy === user?.uid;
       if (!isInvolved) return false;
     }
-    // Colaborador: sees activities assigned to them, created by them, or where they're a collaborator
+    // Colaborador: sees activities assigned to them, created by them, where they're a collaborator, or in their group (to allow picking up tasks)
     if (isColaborador) {
       const isAssigned = activity.assignees?.some(a => a.uid === user?.uid) || activity.assigneeId === user?.uid;
       const isCreator = activity.createdBy === user?.uid;
       const isCollab = activity.collaborators?.some(c => c.uid === user?.uid);
-      if (!isAssigned && !isCreator && !isCollab) return false;
+      const isSameGroup = activity.groupId === profile?.groupId;
+      if (!isAssigned && !isCreator && !isCollab && !isSameGroup) return false;
     }
 
     const searchLower = searchQuery.toLowerCase();
@@ -359,7 +402,7 @@ export const KanbanBoard: React.FC = () => {
 
       {/* Kanban Board */}
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
+        <div className="flex overflow-x-auto lg:grid lg:grid-cols-4 gap-6 items-start pb-4 snap-x snap-mandatory custom-scrollbar">
           {COLUMNS.map((column) => (
             <Droppable key={column.id} droppableId={column.id}>
               {(provided, snapshot) => (
@@ -367,7 +410,7 @@ export const KanbanBoard: React.FC = () => {
                   {...provided.droppableProps}
                   ref={provided.innerRef}
                   className={cn(
-                    "flex flex-col min-h-[500px] rounded-3xl p-2 transition-colors border",
+                    "flex flex-col min-h-[500px] rounded-3xl p-2 transition-colors border min-w-[85vw] md:min-w-[45vw] lg:min-w-0 shrink-0 snap-center",
                     snapshot.isDraggingOver ? column.accent : "border-transparent bg-white/[0.01]"
                   )}
                 >
@@ -400,6 +443,8 @@ export const KanbanBoard: React.FC = () => {
                                 onStatusChange={handleStatusChange}
                                 onAssignToMe={handleAssignToMe}
                                 onJoinAsHelper={handleJoinAsHelper}
+                                onLeaveAsHelper={handleLeaveAsHelper}
+                                onEdit={(a) => { setEditingActivity(a); setIsModalOpen(true); }}
                                 onToggleChecklistItem={handleToggleChecklistItem}
                                 onDelete={handleDeleteActivity}
                               />
@@ -429,8 +474,9 @@ export const KanbanBoard: React.FC = () => {
 
       <NewActivityModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleCreateActivity}
+        onClose={() => { setIsModalOpen(false); setEditingActivity(null); }}
+        onSubmit={handleCreateOrUpdateActivity}
+        initialData={editingActivity}
       />
 
       <AnalyticsModal

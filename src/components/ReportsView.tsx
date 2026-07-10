@@ -91,7 +91,8 @@ export const ReportsView: React.FC = () => {
           a.assignees?.some(x => x.uid === user.uid) ||
           a.assigneeId === user.uid ||
           a.createdBy === user.uid ||
-          a.collaborators?.some(c => c.uid === user.uid)
+          a.collaborators?.some(c => c.uid === user.uid) ||
+          (a.groupId && a.groupId === profile.groupId)
         );
       }
 
@@ -155,22 +156,33 @@ export const ReportsView: React.FC = () => {
         useCORS: true,
         backgroundColor: '#0f172a',
         logging: false,
+        windowWidth: reportRef.current.scrollWidth,
       });
+      
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const imgWidth = 210;
-      const pageHeight = 297;
+      
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+      const marginX = 10;
+      const marginY = 10;
+      
+      const imgWidth = pdfWidth - (marginX * 2);
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
       let heightLeft = imgHeight;
-      let position = 0;
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
+      let position = marginY;
+
+      pdf.addImage(imgData, 'PNG', marginX, position, imgWidth, imgHeight);
+      heightLeft -= (pdfHeight - marginY * 2);
+
+      while (heightLeft > 0) {
+        position = position - pdfHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+        pdf.addImage(imgData, 'PNG', marginX, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
       }
+      
       pdf.save(`Relatorio_NitedSync_${dateFrom}_${dateTo}.pdf`);
     } catch (err) {
       console.error('PDF export error:', err);

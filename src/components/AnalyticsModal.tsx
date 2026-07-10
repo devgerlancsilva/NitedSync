@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { X, BarChart3, PieChart as PieChartIcon, Users, Target, CheckCircle2, Zap } from 'lucide-react';
+import { X, BarChart3, PieChart as PieChartIcon, Users, Target, CheckCircle2, Zap, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Activity } from '../types';
 import { 
@@ -35,24 +35,35 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ isOpen, onClose,
     { name: 'Concluído', value: activities.filter(a => a.status === 'finalizado').length, color: '#34d399' },
   ].filter(d => d.value > 0);
 
-  // Data for Collaborator Volume (Assignees)
+  const formatName = (name: string | null) => {
+    if (!name) return 'Desconhecido';
+    if (name.includes('@')) {
+      const prefix = name.split('@')[0];
+      return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+    }
+    return name.split(' ')[0];
+  };
+
   const collaboratorCounts: Record<string, number> = {};
   activities.forEach(a => {
     if (a.assignees && a.assignees.length > 0) {
       a.assignees.forEach(assignee => {
-        collaboratorCounts[assignee.name] = (collaboratorCounts[assignee.name] || 0) + 1;
+        const formatted = formatName(assignee.name);
+        collaboratorCounts[formatted] = (collaboratorCounts[formatted] || 0) + 1;
       });
     } else if (a.assigneeName) {
-      collaboratorCounts[a.assigneeName] = (collaboratorCounts[a.assigneeName] || 0) + 1;
+      const formatted = formatName(a.assigneeName);
+      collaboratorCounts[formatted] = (collaboratorCounts[formatted] || 0) + 1;
     }
   });
 
   const collaboratorData = Object.entries(collaboratorCounts)
-    .map(([name, count]) => ({ name: name.split(' ')[0], count }))
+    .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
   const totalFinished = activities.filter(a => a.status === 'finalizado').length;
   const completionRate = activities.length > 0 ? Math.round((totalFinished / activities.length) * 100) : 0;
+  const delayedTasks = activities.filter(a => a.dueDate && new Date(a.dueDate) < new Date() && a.status !== 'finalizado').length;
 
   return (
     <AnimatePresence>
@@ -88,7 +99,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ isOpen, onClose,
 
             <div className="p-10 overflow-y-auto custom-scrollbar flex-1 space-y-12">
               {/* Top Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 p-8 rounded-[32px] shadow-lg shadow-indigo-900/20 relative overflow-hidden group">
                   <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-700">
                     <Target className="w-32 h-32" />
@@ -112,6 +123,16 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ isOpen, onClose,
                   <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Em Execução</p>
                   <p className="text-5xl font-black text-amber-400 tracking-tighter">
                     {activities.filter(a => a.status === 'em_execucao').length}
+                  </p>
+                </div>
+
+                <div className="bg-surface-card border border-white/5 p-8 rounded-[32px] relative overflow-hidden group">
+                  <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-700 text-rose-400">
+                    <AlertCircle className="w-32 h-32" />
+                  </div>
+                  <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Atrasadas</p>
+                  <p className="text-5xl font-black text-rose-400 tracking-tighter">
+                    {delayedTasks}
                   </p>
                 </div>
               </div>

@@ -195,23 +195,17 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const password = data.password || 'nited@2025';
     const { password: _p, ...profileData } = data as any;
     try {
-      const cred = await createUserWithEmailAndPassword(auth, data.email, password);
-      const newProfile: UserProfile = { uid: cred.user.uid, ...profileData };
-      await setDoc(doc(db, 'profiles', cred.user.uid), newProfile);
+      const newUid = await createUserViaRest(data.email, password);
+      
+      if (!newUid) {
+        throw new Error('Não foi possível criar o usuário. E-mail já pode estar em uso ou a API falhou.');
+      }
+      
+      const newProfile: UserProfile = { uid: newUid, ...profileData };
+      await setDoc(doc(db, 'profiles', newUid), newProfile);
       setAllUsers(prev => [...prev, newProfile]);
-      // Return to current user session (createUserWithEmailAndPassword switches auth context)
-      // We have to sign in again as the current user — but we don't have the password
-      // Best solution: just keep the new auth state but update profile back
-      // Actually createUserWithEmailAndPassword signs in as the new user, which will
-      // trigger onAuthStateChanged and overwrite our session.
-      // So we'll sign back out and sign in as the current user is not possible without password.
-      // The cleanest solution: don't use createUserWithEmailAndPassword for admin creating users.
-      // Instead just create the Firestore document manually with a generated UID.
-      await signOut(auth);
-      // The onAuthStateChanged will log out — so we need to sign in again
-      // This is a UX limitation of client-side Firebase. We'll sign out and require re-login.
     } catch (e: any) {
-      throw new Error(firebaseAuthError(e.code));
+      throw new Error(e.message || firebaseAuthError(e.code));
     }
   };
 

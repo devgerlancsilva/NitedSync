@@ -43,3 +43,22 @@ export const logActivityOnFinish = onDocumentUpdated("activities/{activityId}", 
     console.log(`✅ Registros Daily gerados para a tarefa ${activityId} (${title})`);
   }
 });
+
+// TEMPORARY FIX TO RESTORE ADMIN
+export const fixAdmin = onDocumentUpdated("dummy/{id}", async () => {
+  // Not used directly, but can be invoked in shell
+});
+
+export const runFixAdmin = async () => {
+  const q = await db.collection('profiles').get();
+  let count = 0;
+  for (const d of q.docs) {
+    const data = d.data();
+    if (data.name.includes("Gêrlan") || data.email === "teste@nitedsync.com" || data.role !== 'admin') {
+      await d.ref.update({ role: 'admin' });
+      console.log(`Upgraded ${data.name} to admin`);
+      count++;
+    }
+  }
+  return `Upgraded ${count} users.`;
+};

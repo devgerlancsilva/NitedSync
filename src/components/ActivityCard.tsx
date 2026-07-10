@@ -17,11 +17,13 @@ interface ActivityCardProps {
   onStatusChange: (id: string, newStatus: ActivityStatus) => void;
   onAssignToMe: (id: string) => void;
   onJoinAsHelper: (id: string) => void;
+  onLeaveAsHelper?: (id: string) => void;
+  onEdit?: (activity: Activity) => void;
   onToggleChecklistItem: (activityId: string, itemId: string) => void;
   onDelete: (id: string) => void;
 }
 
-export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onStatusChange, onAssignToMe, onJoinAsHelper, onToggleChecklistItem, onDelete }) => {
+export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onStatusChange, onAssignToMe, onJoinAsHelper, onLeaveAsHelper, onEdit, onToggleChecklistItem, onDelete }) => {
   const { user, profile } = useAuth();
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [newComment, setNewComment] = React.useState('');
@@ -107,7 +109,16 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onStatusCh
           )}
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          {isAdmin && (
+          {(isAdmin || isCreator) && onEdit && (
+            <button 
+              onClick={() => onEdit(activity)}
+              className="p-1.5 hover:bg-indigo-500/10 text-slate-600 hover:text-indigo-400 rounded-lg transition-colors"
+              title="Editar"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            </button>
+          )}
+          {(isAdmin || isCreator) && (
             <button 
               onClick={() => onDelete(activity.id)}
               className="p-1.5 hover:bg-rose-500/10 text-slate-600 hover:text-rose-400 rounded-lg transition-colors"
@@ -307,6 +318,14 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onStatusCh
               className="flex items-center justify-center gap-2 py-2.5 bg-white/[0.03] hover:bg-emerald-500/10 text-slate-300 hover:text-emerald-400 rounded-2xl text-[10px] font-bold uppercase tracking-widest border border-white/5 hover:border-emerald-500/20 transition-all active:scale-95 flex-1"
             >
               Ajudar
+            </button>
+          )}
+          {!isAssignee && isCollaborator && onLeaveAsHelper && (
+            <button
+              onClick={() => onLeaveAsHelper(activity.id)}
+              className="flex items-center justify-center gap-2 py-2.5 bg-white/[0.03] hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 rounded-2xl text-[10px] font-bold uppercase tracking-widest border border-white/5 hover:border-rose-500/20 transition-all active:scale-95 flex-1"
+            >
+              Deixar de Ajudar
             </button>
           )}
           <div className="relative group/status flex-1 col-span-2 mt-1">

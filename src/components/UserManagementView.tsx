@@ -26,13 +26,14 @@ const SECTORS = ['Diretoria', 'Desenvolvimento', 'Design', 'Financeiro', 'Operac
 interface UserFormData {
   name: string;
   email: string;
+  password?: string;
   role: UserRole;
   sector: string;
   groupId: string;
 }
 
 const DEFAULT_FORM: UserFormData = {
-  name: '', email: '', role: 'colaborador', sector: 'Desenvolvimento', groupId: 'dev'
+  name: '', email: '', password: '', role: 'colaborador', sector: 'Desenvolvimento', groupId: 'dev'
 };
 
 interface ModalProps {
@@ -145,8 +146,8 @@ export const UserManagementView: React.FC = () => {
     }
   };
 
-  const UserForm = () => (
-    <div className="px-8 py-6 space-y-4">
+  const renderFormContent = (isEditing: boolean) => (
+    <form onSubmit={(e) => { e.preventDefault(); isEditing ? handleEdit() : handleCreate(); }} className="px-8 py-6 space-y-4">
       <div>
         <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Nome Completo</label>
         <input
@@ -154,6 +155,7 @@ export const UserManagementView: React.FC = () => {
           value={formData.name}
           onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
           placeholder="Ex: João da Silva"
+          required
           className="w-full px-4 py-3 bg-surface-base/50 border border-white/5 rounded-xl text-white text-sm placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"
         />
       </div>
@@ -164,16 +166,33 @@ export const UserManagementView: React.FC = () => {
           value={formData.email}
           onChange={e => setFormData(p => ({ ...p, email: e.target.value }))}
           placeholder="joao@empresa.com"
+          required
           className="w-full px-4 py-3 bg-surface-base/50 border border-white/5 rounded-xl text-white text-sm placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"
         />
       </div>
+      {!isEditing && (
+        <div>
+          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Senha</label>
+          <input
+            type="password"
+            value={formData.password}
+            onChange={e => setFormData(p => ({ ...p, password: e.target.value }))}
+            placeholder="Senha para o novo usuário"
+            required
+            minLength={6}
+            className="w-full px-4 py-3 bg-surface-base/50 border border-white/5 rounded-xl text-white text-sm placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"
+          />
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Perfil</label>
           <select
             value={formData.role}
             onChange={e => setFormData(p => ({ ...p, role: e.target.value as UserRole }))}
-            className="w-full px-4 py-3 bg-surface-base/50 border border-white/5 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500/50 transition-all cursor-pointer"
+            disabled={isEditing && editingUser?.uid === profile?.uid}
+            title={isEditing && editingUser?.uid === profile?.uid ? "Você não pode alterar o seu próprio papel" : ""}
+            className="w-full px-4 py-3 bg-surface-base/50 border border-white/5 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500/50 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <option value="admin" className="bg-surface-panel">Admin</option>
             <option value="supervisor" className="bg-surface-panel">Supervisor</option>
@@ -209,21 +228,22 @@ export const UserManagementView: React.FC = () => {
       </div>
       <div className="flex gap-3 pt-2">
         <button
-          onClick={editingUser ? handleEdit : handleCreate}
-          disabled={saving || !formData.name.trim() || !formData.email.trim()}
+          type="submit"
+          disabled={saving || !formData.name.trim() || !formData.email.trim() || (!isEditing && !formData.password?.trim())}
           className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white py-3 rounded-2xl font-black text-sm transition-all active:scale-95"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          {saving ? 'Salvando...' : editingUser ? 'Salvar Alterações' : 'Criar Usuário'}
+          {saving ? 'Salvando...' : isEditing ? 'Salvar Alterações' : 'Criar Usuário'}
         </button>
         <button
+          type="button"
           onClick={() => { setIsCreateOpen(false); setEditingUser(null); }}
           className="px-6 py-3 bg-white/5 hover:bg-white/10 text-slate-400 rounded-2xl font-bold text-sm transition-all"
         >
           Cancelar
         </button>
       </div>
-    </div>
+    </form>
   );
 
   return (
@@ -346,12 +366,12 @@ export const UserManagementView: React.FC = () => {
 
       {/* Create Modal */}
       <Modal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} title="Novo Usuário">
-        <UserForm />
+        {renderFormContent(false)}
       </Modal>
 
       {/* Edit Modal */}
       <Modal isOpen={!!editingUser} onClose={() => setEditingUser(null)} title="Editar Usuário">
-        <UserForm />
+        {renderFormContent(true)}
       </Modal>
 
       {/* Delete confirmation */}

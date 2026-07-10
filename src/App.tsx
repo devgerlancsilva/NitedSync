@@ -190,26 +190,41 @@ export default function App() {
               <Layout className="w-5 h-5 text-white" />
             </div>
             <span className="text-lg font-bold text-white tracking-tight hidden md:inline">NitedSync</span>
+            {profile.role !== 'admin' && (
+              <button 
+                onClick={async () => {
+                  const { doc, setDoc } = await import('firebase/firestore');
+                  const { db } = await import('./lib/firebase');
+                  await setDoc(doc(db, 'profiles', profile.uid), { ...profile, role: 'admin' }, { merge: true });
+                  alert('Pronto! Agora atualize a página (F5) para ver o painel de Admin novamente.');
+                }}
+                className="bg-rose-500 hover:bg-rose-600 text-white px-3 py-1 text-xs rounded-xl ml-4 font-bold"
+              >
+                🛠️ RECUPERAR ADMIN
+              </button>
+            )}
           </div>
 
           {/* Navigation */}
-          <nav className="flex items-center gap-1 p-1 bg-white/[0.03] rounded-xl border border-white/5 overflow-x-auto scrollbar-none">
-            {visibleNavItems.map(item => (
-              <button
-                key={item.id}
-                onClick={() => setCurrentView(item.id)}
-                className={cn(
-                  "flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
-                  currentView === item.id
-                    ? "bg-indigo-600 text-white shadow-lg"
-                    : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
-                )}
-              >
-                <item.icon className="w-3.5 h-3.5 shrink-0" />
-                <span className="hidden sm:inline">{item.label}</span>
-              </button>
-            ))}
-          </nav>
+          <div className="flex-1 min-w-0 flex justify-center mx-2">
+            <nav className="flex items-center gap-1 p-1 bg-white/[0.03] rounded-xl border border-white/5 overflow-x-auto scrollbar-none max-w-full">
+              {visibleNavItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => setCurrentView(item.id)}
+                  className={cn(
+                    "flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0",
+                    currentView === item.id
+                      ? "bg-indigo-600 text-white shadow-lg"
+                      : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+                  )}
+                >
+                  <item.icon className="w-3.5 h-3.5 shrink-0" />
+                  <span className="hidden sm:inline">{item.label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
 
           {/* User info + logout */}
           <div className="flex items-center gap-3 shrink-0">
