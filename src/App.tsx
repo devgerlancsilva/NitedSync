@@ -190,19 +190,6 @@ export default function App() {
               <Layout className="w-5 h-5 text-white" />
             </div>
             <span className="text-lg font-bold text-white tracking-tight hidden md:inline">NitedSync</span>
-            {profile.role !== 'admin' && (
-              <button 
-                onClick={async () => {
-                  const { doc, setDoc } = await import('firebase/firestore');
-                  const { db } = await import('./lib/firebase');
-                  await setDoc(doc(db, 'profiles', profile.uid), { ...profile, role: 'admin' }, { merge: true });
-                  alert('Pronto! Agora atualize a página (F5) para ver o painel de Admin novamente.');
-                }}
-                className="bg-rose-500 hover:bg-rose-600 text-white px-3 py-1 text-xs rounded-xl ml-4 font-bold"
-              >
-                🛠️ RECUPERAR ADMIN
-              </button>
-            )}
           </div>
 
           {/* Navigation */}
