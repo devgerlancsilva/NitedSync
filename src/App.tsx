@@ -35,7 +35,8 @@ const ROLE_CONFIG = {
 
 // ─── Login Screen ─────────────────────────────────────────────────────────────
 function LoginScreen() {
-  const { login, authError, loading } = useAuth();
+  const { login, authError, loading, seedUsers } = useAuth();
+  const [seeding, setSeeding] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -137,6 +138,26 @@ function LoginScreen() {
                 : 'Entrar'}
             </button>
           </form>
+
+          {/* Seed Button */}
+          <button
+            type="button"
+            onClick={async () => {
+              setSeeding(true);
+              try {
+                await seedUsers();
+                alert('Banco populado com usuários de teste!');
+              } catch (e: any) {
+                alert('Erro ao popular banco: ' + e.message);
+              } finally {
+                setSeeding(false);
+              }
+            }}
+            disabled={seeding || loading}
+            className="w-full mt-4 flex items-center justify-center gap-2 bg-slate-800/50 hover:bg-slate-700/50 disabled:opacity-40 text-slate-300 py-3 rounded-xl font-bold text-xs tracking-wide transition-all border border-white/5"
+          >
+            {seeding ? <><Loader2 className="w-4 h-4 animate-spin" /> Gerando Dados...</> : 'Criar usuários de teste (Dev)'}
+          </button>
         </div>
 
         {/* Footer Credits */}

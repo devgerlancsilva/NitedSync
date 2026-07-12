@@ -36,6 +36,7 @@ interface AuthContextType {
   createUser: (data: Omit<UserProfile, 'uid'> & { password?: string }) => Promise<void>;
   updateUser: (uid: string, data: Partial<UserProfile>) => Promise<void>;
   deleteUser: (uid: string) => Promise<void>;
+  seedUsers: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -50,6 +51,7 @@ const AuthContext = createContext<AuthContextType>({
   createUser: async () => {},
   updateUser: async () => {},
   deleteUser: async () => {},
+  seedUsers: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -89,25 +91,62 @@ async function createUserViaRest(email: string, password: string): Promise<strin
         body: JSON.stringify({ email, password, returnSecureToken: false }),
       }
     );
-    if (!res.ok) return null; // e.g. EMAIL_EXISTS → ignore
+    if (!res.ok) {
+      const errorData = await res.json();
+      console.error('Erro no createUserViaRest:', errorData);
+      throw new Error(`Falha na API: ${errorData.error?.message || 'Erro desconhecido'}`);
+    }
     const data = await res.json();
     return data.localId as string;
-  } catch {
-    return null;
+  } catch (e: any) {
+    if (e.message.includes('Falha na API: EMAIL_EXISTS')) {
+       throw new Error('EMAIL_EXISTS');
+    }
+    throw e;
   }
 }
 
 async function seedAllTestUsers() {
+  // Flag to disable the onAuthStateChanged auto-profile creation during seeding
+  (window as any).isSeeding = true;
+
   for (const seedUser of SEED_USERS) {
-    const uid = await createUserViaRest(seedUser.email, seedUser.password);
+    let uid: string | null = null;
+    let didLoginToGetUid = false;
+
+    try {
+      uid = await createUserViaRest(seedUser.email, seedUser.password);
+    } catch (err: any) {
+      if (err.message === 'EMAIL_EXISTS') {
+        try {
+          const cred = await signInWithEmailAndPassword(auth, seedUser.email, seedUser.password);
+          uid = cred.user.uid;
+          didLoginToGetUid = true;
+        } catch (signInErr: any) {
+          console.error(`Erro ao tentar logar para recuperar UID do ${seedUser.email}:`, signInErr);
+        }
+      } else {
+        console.error(`Erro ao criar usuário ${seedUser.email}:`, err);
+      }
+    }
+    
     if (uid) {
-      // New user created — write their Firestore profile
+      // Cria ou recria o perfil no Firestore. 
+      // Se tivermos logado para pegar o UID, a gente faz o setDoc ENQUANTO ESTÁ LOGADO
+      // para evitar problemas de permissão.
       try {
         await setDoc(doc(db, 'profiles', uid), { uid, ...seedUser.profile });
-      } catch { /* ignore */ }
+      } catch (e) {
+        console.error('Erro ao escrever no Firestore para o usuário', seedUser.email, e);
+      }
     }
-    // If uid is null the user already exists — skip
+
+    if (didLoginToGetUid) {
+      await signOut(auth);
+    }
   }
+
+  (window as any).isSeeding = false;
 }
 
 // ─── Provider ────────────────────────────────────────────────────────────────
@@ -138,7 +177,9 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               sector: 'Geral',
               groupId: 'geral',
             };
-            await setDoc(doc(db, 'profiles', fbUser.uid), defaultProfile);
+            if (!(window as any).isSeeding) {
+              await setDoc(doc(db, 'profiles', fbUser.uid), defaultProfile);
+            }
             setProfile(defaultProfile);
           }
         } catch (e) {
@@ -220,13 +261,18 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setAllUsers(prev => prev.filter(u => u.uid !== uid));
   };
 
+  const seedUsers = async () => {
+    await seedAllTestUsers();
+  };
+
   return (
     <AuthContext.Provider value={{
       user, profile, loading, authError,
       login, logout,
-      allUsers, refreshUsers, createUser, updateUser, deleteUser,
+      allUsers, refreshUsers, createUser, updateUser, deleteUser, seedUsers,
     }}>
       {children}
+
     </AuthContext.Provider>
   );
 };
