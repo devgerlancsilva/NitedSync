@@ -26,12 +26,11 @@ interface UserFormData {
   email: string;
   password?: string;
   role: UserRole;
-  sector: string;
   groupId: string;
 }
 
 const DEFAULT_FORM: UserFormData = {
-  name: '', email: '', password: '', role: 'colaborador', sector: '', groupId: ''
+  name: '', email: '', password: '', role: 'colaborador', groupId: ''
 };
 
 interface ModalProps {
@@ -90,8 +89,7 @@ export const UserManagementView: React.FC = () => {
 
   const filteredUsers = allUsers.filter(u => {
     const matchSearch = u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        u.sector.toLowerCase().includes(searchQuery.toLowerCase());
+                        u.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchRole = roleFilter === 'todos' || u.role === roleFilter;
     return matchSearch && matchRole;
   });
@@ -106,7 +104,6 @@ export const UserManagementView: React.FC = () => {
       name: user.name,
       email: user.email,
       role: user.role,
-      sector: user.sector,
       groupId: user.groupId || 'dev',
     });
     setEditingUser(user);
@@ -204,20 +201,6 @@ export const UserManagementView: React.FC = () => {
             <option value="colaborador" className="bg-surface-panel">Colaborador</option>
           </select>
         </div>
-        <div>
-          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-            Setor <span className="text-rose-500">*</span>
-          </label>
-          <select
-            required
-            value={formData.sector}
-            onChange={e => setFormData(p => ({ ...p, sector: e.target.value }))}
-            className="w-full px-4 py-3 bg-surface-base/50 border border-white/5 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500/50 transition-all cursor-pointer"
-          >
-            <option value="" disabled>Selecione um Setor</option>
-            {settings.sectors.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
       </div>
       <div>
         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
@@ -280,7 +263,7 @@ export const UserManagementView: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Pesquisar por nome, email ou setor..."
+            placeholder="Pesquisar por nome ou email..."
             className="w-full pl-11 pr-4 py-3 bg-surface-panel border border-white/5 rounded-2xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/30 transition-all"
           />
         </div>
@@ -335,7 +318,7 @@ export const UserManagementView: React.FC = () => {
                   {rc.label}
                 </span>
                 <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold text-slate-400 bg-white/5">
-                  {u.sector}
+                  {settings.groups.find(g => g.id === u.groupId)?.name || 'Sem grupo'}
                 </span>
               </div>
 

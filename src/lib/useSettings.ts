@@ -23,7 +23,6 @@ export interface Group {
 
 export interface SystemSettings {
   groups: Group[];
-  sectors: string[];
   sprints: Sprint[];
   categories: string[];
 }
@@ -37,7 +36,6 @@ const DEFAULT_SETTINGS: SystemSettings = {
     { id: 'operacional', name: 'Operacional' },
     { id: 'marketing', name: 'Marketing' }
   ],
-  sectors: ['Diretoria', 'Desenvolvimento', 'Design', 'Financeiro', 'Operacional', 'Marketing'],
   sprints: [],
   categories: ['Design', 'Desenvolvimento', 'Financeiro', 'Operacional', 'Marketing', 'Outros']
 };
@@ -52,7 +50,6 @@ export function useSettings() {
         const data = snap.data();
         setSettings({
           groups: data.groups || DEFAULT_SETTINGS.groups,
-          sectors: data.sectors || DEFAULT_SETTINGS.sectors,
           sprints: data.sprints || DEFAULT_SETTINGS.sprints,
           categories: data.categories || data.list || DEFAULT_SETTINGS.categories, // migrate old list
         });

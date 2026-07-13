@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './FirebaseProvider';
 import { updateDoc, doc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { useSettings } from '../lib/useSettings';
 
 interface ActivityCardProps {
   activity: Activity;
@@ -25,6 +26,7 @@ interface ActivityCardProps {
 
 export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onStatusChange, onAssignToMe, onJoinAsHelper, onLeaveAsHelper, onEdit, onToggleChecklistItem, onDelete }) => {
   const { user, profile } = useAuth();
+  const { settings } = useSettings();
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [newComment, setNewComment] = React.useState('');
   
@@ -105,6 +107,13 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onStatusCh
           {activity.category && (
             <div className="flex items-center px-3 py-1 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
               <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">{activity.category}</span>
+            </div>
+          )}
+          {activity.sprintId && (
+            <div className="flex items-center px-3 py-1 rounded-xl bg-violet-500/5 border border-violet-500/10">
+              <span className="text-[10px] font-black text-violet-300 uppercase tracking-widest">
+                {settings.sprints.find(s => s.id === activity.sprintId)?.name || 'Sprint Desconhecida'}
+              </span>
             </div>
           )}
         </div>
@@ -334,10 +343,10 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onStatusCh
               onChange={(e) => onStatusChange(activity.id, e.target.value as ActivityStatus)}
               className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/[0.03] hover:bg-white/5 text-slate-400 hover:text-slate-200 rounded-2xl text-[10px] font-bold uppercase tracking-widest border border-white/5 transition-all cursor-pointer appearance-none text-center"
             >
-              <option value="backlog">Mover para Backlog</option>
-              <option value="em_execucao">Mover para Execução</option>
-              <option value="em_revisao">Enviar para Revisão</option>
-              <option value="finalizado">Finalizar Tarefa</option>
+              <option value="backlog">Backlog</option>
+              <option value="em_execucao">Em Execução</option>
+              <option value="em_revisao">Em Revisão</option>
+              <option value="finalizado">Finalizado</option>
             </select>
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-20">
               <ChevronDown className="w-3 h-3" />

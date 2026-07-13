@@ -21,8 +21,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const [localSettings, setLocalSettings] = useState(settings);
   const [saving, setSaving] = useState(false);
   
-  // Active tab
-  const [activeTab, setActiveTab] = useState<'groups' | 'sectors' | 'categories' | 'sprints'>('groups');
+  const [activeTab, setActiveTab] = useState<'groups' | 'categories' | 'sprints'>('groups');
 
   // Sync when settings load
   React.useEffect(() => {
@@ -50,16 +49,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     setLocalSettings(s => ({ ...s, groups: s.groups.filter((_, i) => i !== idx) }));
   };
 
-  const addSector = () => {
-    const name = prompt('Nome do novo setor:');
-    if (name) {
-      setLocalSettings(s => ({ ...s, sectors: [...s.sectors, name] }));
-    }
-  };
 
-  const removeSector = (idx: number) => {
-    setLocalSettings(s => ({ ...s, sectors: s.sectors.filter((_, i) => i !== idx) }));
-  };
 
   const addCategory = () => {
     const name = prompt('Nome da nova categoria:');
@@ -94,8 +84,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   };
 
   const tabs = [
-    { id: 'groups', label: 'Grupos (Equipes)' },
-    { id: 'sectors', label: 'Setores' },
+    { id: 'groups', label: 'Grupos / Setores' },
     { id: 'categories', label: 'Categorias de Tarefas' },
     { id: 'sprints', label: 'Sprints' }
   ] as const;
@@ -176,24 +165,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   </div>
                 )}
 
-                {activeTab === 'sectors' && (
-                  <div>
-                    <div className="flex justify-between items-center mb-4">
-                      <p className="text-sm text-slate-400">Setores são utilizados no cadastro de usuários para fins de organização.</p>
-                      <button onClick={addSector} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all">
-                        <Plus className="w-4 h-4" /> Novo Setor
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      {localSettings.sectors.map((s, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-4 bg-surface-base border border-white/5 rounded-2xl">
-                          <p className="text-sm font-bold text-white">{s}</p>
-                          <button onClick={() => removeSector(idx)} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg"><Trash2 className="w-4 h-4" /></button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {activeTab === 'categories' && (
                   <div>

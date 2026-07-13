@@ -44,6 +44,7 @@ export const KanbanBoard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<ActivityPriority | 'todas'>('todas');
   const [categoryFilter, setCategoryFilter] = useState<string | 'todas'>('todas');
+  const [sprintFilter, setSprintFilter] = useState<string | 'todas'>('todas');
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
@@ -95,7 +96,7 @@ export const KanbanBoard: React.FC = () => {
 
   const handleCreateOrUpdateActivity = async (
     title: string, description: string, priority: ActivityPriority,
-    category: string | null, dueDate: string | null,
+    category: string | null, dueDate: string | null, sprintId: string | null,
     assignee: { id: string | null, name: string | null } | null,
     checklist: Array<{ id: string, text: string, completed: boolean }>
   ) => {
@@ -107,6 +108,7 @@ export const KanbanBoard: React.FC = () => {
           description,
           priority,
           category,
+          sprintId,
           dueDate,
           assigneeId: assignee?.id || null,
           assigneeName: assignee?.name || null,
@@ -131,6 +133,7 @@ export const KanbanBoard: React.FC = () => {
           status: 'backlog',
           priority,
           category,
+          sprintId,
           dueDate,
           assigneeId: assignee?.id || null,
           assigneeName: assignee?.name || null,
@@ -289,7 +292,12 @@ export const KanbanBoard: React.FC = () => {
     );
     const matchesPriority = priorityFilter === 'todas' || activity.priority === priorityFilter;
     const matchesCategory = categoryFilter === 'todas' || activity.category === categoryFilter;
-    return matchesSearch && matchesPriority && matchesCategory;
+    const matchesSprint = sprintFilter === 'todas' 
+      ? true 
+      : sprintFilter === 'backlog' 
+        ? !activity.sprintId 
+        : activity.sprintId === sprintFilter;
+    return matchesSearch && matchesPriority && matchesCategory && matchesSprint;
   });
 
   const stats = {
@@ -348,9 +356,9 @@ export const KanbanBoard: React.FC = () => {
         
         <div className="flex flex-wrap items-center gap-3">
           {/* Priority filter */}
-          <div className="flex items-center gap-2 bg-surface-base/50 p-1.5 rounded-2xl border border-white/5">
-            <span className="px-2 text-[9px] font-black text-slate-600 uppercase tracking-widest border-r border-white/5">Prioridade</span>
-            <div className="flex gap-1">
+          <div className="flex items-center gap-2 bg-surface-base/50 p-1.5 rounded-2xl border border-white/5 max-w-full overflow-x-auto scrollbar-none">
+            <span className="px-2 shrink-0 text-[9px] font-black text-slate-600 uppercase tracking-widest border-r border-white/5">Prioridade</span>
+            <div className="flex gap-1 shrink-0">
               {(['todas', 'alta', 'media', 'baixa'] as const).map((p) => (
                 <button
                   key={p}
@@ -367,8 +375,8 @@ export const KanbanBoard: React.FC = () => {
           </div>
 
           {/* Category filter */}
-          <div className="flex items-center gap-2 bg-surface-base/50 p-1.5 rounded-2xl border border-white/5">
-            <span className="px-2 text-[9px] font-black text-slate-600 uppercase tracking-widest border-r border-white/5">Categoria</span>
+          <div className="flex items-center gap-2 bg-surface-base/50 p-1.5 rounded-2xl border border-white/5 max-w-full overflow-x-auto scrollbar-none">
+            <span className="px-2 shrink-0 text-[9px] font-black text-slate-600 uppercase tracking-widest border-r border-white/5">Categoria</span>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
@@ -377,6 +385,22 @@ export const KanbanBoard: React.FC = () => {
               <option value="todas" className="bg-surface-panel text-slate-200">Todas</option>
               {settings.categories.map(cat => (
                 <option key={cat} value={cat} className="bg-surface-panel text-slate-200">{cat}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Sprint filter */}
+          <div className="flex items-center gap-2 bg-surface-base/50 p-1.5 rounded-2xl border border-white/5 max-w-full overflow-x-auto scrollbar-none">
+            <span className="px-2 shrink-0 text-[9px] font-black text-slate-600 uppercase tracking-widest border-r border-white/5">Sprint</span>
+            <select
+              value={sprintFilter}
+              onChange={(e) => setSprintFilter(e.target.value)}
+              className="bg-transparent text-[10px] font-bold uppercase tracking-widest text-slate-400 focus:outline-none px-2 cursor-pointer appearance-none max-w-[150px] truncate"
+            >
+              <option value="todas" className="bg-surface-panel text-slate-200">Todas</option>
+              <option value="backlog" className="bg-surface-panel text-slate-200">Sem Sprint</option>
+              {settings.sprints.map(s => (
+                <option key={s.id} value={s.id} className="bg-surface-panel text-slate-200">{s.name}</option>
               ))}
             </select>
           </div>

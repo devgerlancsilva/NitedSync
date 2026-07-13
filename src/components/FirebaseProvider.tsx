@@ -61,17 +61,17 @@ const SEED_USERS: Array<{ email: string; password: string; profile: Omit<UserPro
   {
     email: 'teste@nitedsync.com',
     password: 'teste123',
-    profile: { name: 'Usuário Teste (Admin)', email: 'teste@nitedsync.com', role: 'admin', sector: 'Diretoria', groupId: 'diretoria' },
+    profile: { name: 'Usuário Teste (Admin)', email: 'teste@nitedsync.com', role: 'admin', groupId: 'diretoria' },
   },
   {
     email: 'supervisor@nitedsync.com',
     password: 'supervisor123',
-    profile: { name: 'Marina Souza (Supervisora)', email: 'supervisor@nitedsync.com', role: 'supervisor', sector: 'Desenvolvimento', groupId: 'dev' },
+    profile: { name: 'Marina Souza (Supervisora)', email: 'supervisor@nitedsync.com', role: 'supervisor', groupId: 'dev' },
   },
   {
     email: 'colaborador@nitedsync.com',
     password: 'colaborador123',
-    profile: { name: 'Ana Melo (Colaboradora)', email: 'colaborador@nitedsync.com', role: 'colaborador', sector: 'Design', groupId: 'design' },
+    profile: { name: 'Ana Melo (Colaboradora)', email: 'colaborador@nitedsync.com', role: 'colaborador', groupId: 'design' },
   },
 ];
 
@@ -174,7 +174,6 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Usuário',
               email: fbUser.email || '',
               role: 'colaborador',
-              sector: 'Geral',
               groupId: 'geral',
             };
             if (!(window as any).isSeeding) {

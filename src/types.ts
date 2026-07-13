@@ -12,7 +12,6 @@ export interface UserProfile {
   name: string;
   email: string;
   role: UserRole;
-  sector: string;
   groupId: string; // ID do grupo — supervisor e seus colaboradores compartilham o mesmo groupId
 }
 
@@ -21,7 +20,6 @@ export interface DailyEntry {
   userId: string;
   userName: string;
   userRole: UserRole;
-  sector: string;
   groupId: string;
   description: string;       // descrição da ação feita no dia
   date: string;              // YYYY-MM-DD
@@ -64,6 +62,7 @@ export interface Activity {
   assignees: Array<{ uid: string; name: string }>;
   collaborators: Array<{ uid: string; name: string }>;
   groupId: string | null;    // grupo responsável pela atividade
+  sprintId?: string | null;  // sprint da atividade
   checklist?: Array<{ id: string; text: string; completed: boolean }>;
   comments?: Comment[];
   createdBy: string;

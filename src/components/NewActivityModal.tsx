@@ -14,7 +14,7 @@ import { useAuth } from './FirebaseProvider';
 interface NewActivityModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (title: string, description: string, priority: ActivityPriority, category: string | null, dueDate: string | null, assignee: { id: string | null, name: string | null } | null, checklist: Array<{ id: string, text: string, completed: boolean }>) => void;
+  onSubmit: (title: string, description: string, priority: ActivityPriority, category: string | null, dueDate: string | null, sprintId: string | null, assignee: { id: string | null, name: string | null } | null, checklist: Array<{ id: string, text: string, completed: boolean }>) => void;
   initialData?: Activity | null;
 }
 
@@ -27,6 +27,7 @@ export const NewActivityModal: React.FC<NewActivityModalProps> = ({ isOpen, onCl
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<ActivityPriority>('media');
   const [category, setCategory] = useState('');
+  const [sprintId, setSprintId] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [assignToMe, setAssignToMe] = useState(true);
   const [checklistItems, setChecklistItems] = useState<Array<{ id: string, text: string, completed: boolean }>>([]);
@@ -39,6 +40,7 @@ export const NewActivityModal: React.FC<NewActivityModalProps> = ({ isOpen, onCl
         setDescription(initialData.description || '');
         setPriority(initialData.priority);
         setCategory(initialData.category || '');
+        setSprintId(initialData.sprintId || '');
         setDueDate(initialData.dueDate || '');
         setAssignToMe(initialData.assigneeId === user?.uid);
         setChecklistItems(initialData.checklist || []);
@@ -47,6 +49,7 @@ export const NewActivityModal: React.FC<NewActivityModalProps> = ({ isOpen, onCl
         setDescription('');
         setPriority('media');
         setCategory('');
+        setSprintId('');
         setDueDate('');
         setAssignToMe(true);
         setChecklistItems([]);
@@ -74,7 +77,7 @@ export const NewActivityModal: React.FC<NewActivityModalProps> = ({ isOpen, onCl
       ? { id: user.uid, name: user.displayName || user.email }
       : null;
 
-    onSubmit(title, description, priority, category || null, dueDate || null, assignee, checklistItems);
+    onSubmit(title, description, priority, category || null, dueDate || null, sprintId || null, assignee, checklistItems);
     onClose();
   };
 
@@ -148,6 +151,21 @@ export const NewActivityModal: React.FC<NewActivityModalProps> = ({ isOpen, onCl
                       <option value="" className="bg-surface-panel">Selecione...</option>
                       {settings.categories.map(cat => (
                         <option key={cat} value={cat} className="bg-surface-panel">{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                      <Tag className="w-3 h-3 text-indigo-400" /> Sprint
+                    </label>
+                    <select
+                      value={sprintId}
+                      onChange={(e) => setSprintId(e.target.value)}
+                      className="w-full px-5 py-4 bg-surface-base border border-white/5 rounded-2xl text-white appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm font-medium"
+                    >
+                      <option value="" className="bg-surface-panel">Sem Sprint (Backlog Geral)</option>
+                      {settings.sprints.map(s => (
+                        <option key={s.id} value={s.id} className="bg-surface-panel">{s.name}</option>
                       ))}
                     </select>
                   </div>
