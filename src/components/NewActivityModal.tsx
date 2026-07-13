@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { useCategories } from '../lib/useCategories';
+import { useSettings } from '../lib/useSettings';
 import { X, AlertCircle, Calendar, Tag, UserPlus, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -22,7 +22,7 @@ interface NewActivityModalProps {
 
 export const NewActivityModal: React.FC<NewActivityModalProps> = ({ isOpen, onClose, onSubmit, initialData }) => {
   const { user } = useAuth();
-  const { categories } = useCategories();
+  const { settings } = useSettings();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<ActivityPriority>('media');
@@ -137,7 +137,7 @@ export const NewActivityModal: React.FC<NewActivityModalProps> = ({ isOpen, onCl
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                      <Tag className="w-3 h-3 text-indigo-400" /> Categoria
+                      <Tag className="w-3 h-3 text-indigo-400" /> Categoria <span className="text-rose-500">*</span>
                     </label>
                     <select
                       value={category}
@@ -146,14 +146,14 @@ export const NewActivityModal: React.FC<NewActivityModalProps> = ({ isOpen, onCl
                       className="w-full px-5 py-4 bg-surface-base border border-white/5 rounded-2xl text-white appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm font-medium"
                     >
                       <option value="" className="bg-surface-panel">Selecione...</option>
-                      {categories.map(cat => (
+                      {settings.categories.map(cat => (
                         <option key={cat} value={cat} className="bg-surface-panel">{cat}</option>
                       ))}
                     </select>
                   </div>
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                      <Calendar className="w-3 h-3 text-indigo-400" /> Prazo
+                      <Calendar className="w-3 h-3 text-indigo-400" /> Prazo <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="date"
@@ -237,9 +237,9 @@ export const NewActivityModal: React.FC<NewActivityModalProps> = ({ isOpen, onCl
 
                 <div className="space-y-4">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                    Prioridade
+                    Prioridade <span className="text-rose-500">*</span>
                   </label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {priorityOptions.map((opt) => (
                       <button
                         key={opt.value}

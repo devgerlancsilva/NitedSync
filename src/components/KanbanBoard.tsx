@@ -19,7 +19,7 @@ import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Activity, ActivityStatus, ActivityPriority } from '../types';
 import { cn } from '../lib/utils';
 import { useAuth } from './FirebaseProvider';
-import { useCategories } from '../lib/useCategories';
+import { useSettings } from '../lib/useSettings';
 import { ActivityCard } from './ActivityCard';
 import { NewActivityModal } from './NewActivityModal';
 import { AnalyticsModal } from './AnalyticsModal';
@@ -48,7 +48,7 @@ export const KanbanBoard: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
-  const { categories } = useCategories();
+  const { settings } = useSettings();
 
   const isAdmin = profile?.role === 'admin';
   const isSupervisor = profile?.role === 'supervisor';
@@ -262,7 +262,7 @@ export const KanbanBoard: React.FC = () => {
   };
 
   // Filtering by role
-  const filteredActivities = activities.filter(activity => {
+  const sectorActivities = activities.filter(activity => {
     // Supervisor: only sees activities from their group
     if (isSupervisor && activity.groupId && activity.groupId !== profile?.groupId) {
       const isInvolved = activity.assignees?.some(a => a.uid === user?.uid) || activity.createdBy === user?.uid;
@@ -276,7 +276,10 @@ export const KanbanBoard: React.FC = () => {
       const isSameGroup = activity.groupId === profile?.groupId;
       if (!isAssigned && !isCreator && !isCollab && !isSameGroup) return false;
     }
+    return true;
+  });
 
+  const filteredActivities = sectorActivities.filter(activity => {
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch = (
       activity.title.toLowerCase().includes(searchLower) ||
@@ -290,10 +293,10 @@ export const KanbanBoard: React.FC = () => {
   });
 
   const stats = {
-    total: activities.length,
-    executing: activities.filter(a => a.status === 'em_execucao').length,
-    finished: activities.filter(a => a.status === 'finalizado').length,
-    delayed: activities.filter(a => a.dueDate && new Date(a.dueDate) < new Date() && a.status !== 'finalizado').length,
+    total: sectorActivities.length,
+    executing: sectorActivities.filter(a => a.status === 'em_execucao').length,
+    finished: sectorActivities.filter(a => a.status === 'finalizado').length,
+    delayed: sectorActivities.filter(a => a.dueDate && new Date(a.dueDate) < new Date() && a.status !== 'finalizado').length,
   };
 
   // All roles can create cards
@@ -372,7 +375,7 @@ export const KanbanBoard: React.FC = () => {
               className="bg-transparent text-[10px] font-bold uppercase tracking-widest text-slate-400 focus:outline-none px-2 cursor-pointer appearance-none"
             >
               <option value="todas" className="bg-surface-panel text-slate-200">Todas</option>
-              {categories.map(cat => (
+              {settings.categories.map(cat => (
                 <option key={cat} value={cat} className="bg-surface-panel text-slate-200">{cat}</option>
               ))}
             </select>

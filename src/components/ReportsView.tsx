@@ -151,14 +151,26 @@ export const ReportsView: React.FC = () => {
     if (!reportRef.current) return;
     setExporting(true);
     try {
-      const canvas = await html2canvas(reportRef.current, {
+      const element = reportRef.current;
+      const originalBg = element.style.backgroundColor;
+      element.style.backgroundColor = '#0f172a'; // Ensure dark background is captured
+
+      // Unhide any export-specific elements
+      const hiddenElements = element.querySelectorAll('.export-only');
+      hiddenElements.forEach(el => el.classList.remove('hidden'));
+
+      const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#0f172a',
         logging: false,
-        windowWidth: reportRef.current.scrollWidth,
+        windowWidth: element.scrollWidth,
       });
       
+      // Restore styles
+      element.style.backgroundColor = originalBg;
+      hiddenElements.forEach(el => el.classList.add('hidden'));
+
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       

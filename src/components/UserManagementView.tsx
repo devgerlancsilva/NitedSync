@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from './FirebaseProvider';
-import { useCategories } from '../lib/useCategories';
+import { useSettings } from '../lib/useSettings';
 import { UserProfile, UserRole } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -20,8 +20,6 @@ const ROLE_CONFIG = {
   colaborador: { label: 'Colaborador',   color: 'text-amber-400',   bg: 'bg-amber-500/20',   icon: User2 },
 };
 
-const GROUPS = ['diretoria', 'dev', 'design', 'financeiro', 'operacional', 'marketing'];
-const SECTORS = ['Diretoria', 'Desenvolvimento', 'Design', 'Financeiro', 'Operacional', 'Marketing'];
 
 interface UserFormData {
   name: string;
@@ -33,7 +31,7 @@ interface UserFormData {
 }
 
 const DEFAULT_FORM: UserFormData = {
-  name: '', email: '', password: '', role: 'colaborador', sector: 'Desenvolvimento', groupId: 'dev'
+  name: '', email: '', password: '', role: 'colaborador', sector: '', groupId: ''
 };
 
 interface ModalProps {
@@ -77,6 +75,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => (
 
 export const UserManagementView: React.FC = () => {
   const { allUsers, createUser, updateUser, deleteUser, refreshUsers, profile } = useAuth();
+  const { settings } = useSettings();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | 'todos'>('todos');
@@ -149,36 +148,42 @@ export const UserManagementView: React.FC = () => {
   const renderFormContent = (isEditing: boolean) => (
     <form onSubmit={(e) => { e.preventDefault(); isEditing ? handleEdit() : handleCreate(); }} className="px-8 py-6 space-y-4">
       <div>
-        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Nome Completo</label>
+        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+          Nome <span className="text-rose-500">*</span>
+        </label>
         <input
           type="text"
+          required
           value={formData.name}
           onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
           placeholder="Ex: João da Silva"
-          required
           className="w-full px-4 py-3 bg-surface-base/50 border border-white/5 rounded-xl text-white text-sm placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"
         />
       </div>
       <div>
-        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Email</label>
+        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+          E-mail <span className="text-rose-500">*</span>
+        </label>
         <input
           type="email"
+          required
           value={formData.email}
           onChange={e => setFormData(p => ({ ...p, email: e.target.value }))}
           placeholder="joao@empresa.com"
-          required
           className="w-full px-4 py-3 bg-surface-base/50 border border-white/5 rounded-xl text-white text-sm placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"
         />
       </div>
       {!isEditing && (
         <div>
-          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Senha</label>
+          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+            Senha {!isEditing && <span className="text-rose-500">*</span>} {isEditing && '(Opcional para alterar)'}
+          </label>
           <input
             type="password"
+            required={!isEditing}
             value={formData.password}
             onChange={e => setFormData(p => ({ ...p, password: e.target.value }))}
             placeholder="Senha para o novo usuário"
-            required
             minLength={6}
             className="w-full px-4 py-3 bg-surface-base/50 border border-white/5 rounded-xl text-white text-sm placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"
           />
@@ -200,30 +205,32 @@ export const UserManagementView: React.FC = () => {
           </select>
         </div>
         <div>
-          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Setor</label>
+          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+            Setor <span className="text-rose-500">*</span>
+          </label>
           <select
+            required
             value={formData.sector}
             onChange={e => setFormData(p => ({ ...p, sector: e.target.value }))}
             className="w-full px-4 py-3 bg-surface-base/50 border border-white/5 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500/50 transition-all cursor-pointer"
           >
-            {SECTORS.map(s => (
-              <option key={s} value={s} className="bg-surface-panel">{s}</option>
-            ))}
+            <option value="" disabled>Selecione um Setor</option>
+            {settings.sectors.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
       </div>
       <div>
-        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
-          Grupo <span className="text-slate-600">(define quais atividades o supervisor vê)</span>
+        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+          Grupo de Acesso <span className="text-rose-500">*</span>
         </label>
         <select
+          required
           value={formData.groupId}
           onChange={e => setFormData(p => ({ ...p, groupId: e.target.value }))}
           className="w-full px-4 py-3 bg-surface-base/50 border border-white/5 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500/50 transition-all cursor-pointer"
         >
-          {GROUPS.map(g => (
-            <option key={g} value={g} className="bg-surface-panel">{g}</option>
-          ))}
+          <option value="" disabled>Selecione um Grupo</option>
+          {settings.groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
         </select>
       </div>
       <div className="flex gap-3 pt-2">
@@ -330,9 +337,6 @@ export const UserManagementView: React.FC = () => {
                 <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold text-slate-400 bg-white/5">
                   {u.sector}
                 </span>
-                <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold text-slate-500 bg-white/[0.03] border border-white/5">
-                  grupo: {u.groupId}
-                </span>
               </div>
 
               <div className="flex gap-2 pt-1 border-t border-white/5">
@@ -407,146 +411,3 @@ export const UserManagementView: React.FC = () => {
           </div>
         </div>
       </Modal>
-
-      {/* ─── Category Management Section ─────────────────────────────────── */}
-      <CategoryManager />
-    </div>
-  );
-};
-
-// ─── Category Manager ──────────────────────────────────────────────────────
-function CategoryManager() {
-  const { categories, saveCategories, loading } = useCategories();
-  const [newCat, setNewCat] = useState('');
-  const [editingIdx, setEditingIdx] = useState<number | null>(null);
-  const [editValue, setEditValue] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  const handleAdd = async () => {
-    const trimmed = newCat.trim();
-    if (!trimmed || categories.includes(trimmed)) return;
-    setSaving(true);
-    await saveCategories([...categories, trimmed]);
-    setNewCat('');
-    setSaving(false);
-  };
-
-  const handleDelete = async (idx: number) => {
-    const next = categories.filter((_, i) => i !== idx);
-    setSaving(true);
-    await saveCategories(next);
-    setSaving(false);
-  };
-
-  const startEdit = (idx: number) => {
-    setEditingIdx(idx);
-    setEditValue(categories[idx]);
-  };
-
-  const handleSaveEdit = async () => {
-    if (editingIdx === null) return;
-    const trimmed = editValue.trim();
-    if (!trimmed) return;
-    const next = categories.map((c, i) => i === editingIdx ? trimmed : c);
-    setSaving(true);
-    await saveCategories(next);
-    setEditingIdx(null);
-    setSaving(false);
-  };
-
-  return (
-    <div className="mt-12">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-8 h-8 bg-indigo-500/20 rounded-xl flex items-center justify-center">
-          <Tag className="w-4 h-4 text-indigo-400" />
-        </div>
-        <div>
-          <h2 className="text-lg font-black text-white">Categorias</h2>
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-            Usadas no Kanban e nos filtros de relatório
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-surface-panel border border-white/5 rounded-3xl overflow-hidden">
-        {/* Existing categories */}
-        {loading ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2 className="w-5 h-5 text-indigo-400 animate-spin" />
-          </div>
-        ) : (
-          <div className="divide-y divide-white/[0.03]">
-            {categories.map((cat, idx) => (
-              <div key={idx} className="flex items-center gap-3 px-6 py-4">
-                <GripVertical className="w-4 h-4 text-slate-700 shrink-0" />
-                {editingIdx === idx ? (
-                  <>
-                    <input
-                      autoFocus
-                      value={editValue}
-                      onChange={e => setEditValue(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && handleSaveEdit()}
-                      className="flex-1 px-3 py-1.5 bg-surface-base border border-indigo-500/40 rounded-xl text-sm text-white outline-none"
-                    />
-                    <button
-                      onClick={handleSaveEdit}
-                      disabled={saving}
-                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black transition-all"
-                    >
-                      {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Salvar'}
-                    </button>
-                    <button
-                      onClick={() => setEditingIdx(null)}
-                      className="p-1.5 text-slate-500 hover:text-slate-300 transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <span className="flex-1 text-sm font-medium text-slate-200">{cat}</span>
-                    <button
-                      onClick={() => startEdit(idx)}
-                      className="p-2 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(idx)}
-                      disabled={saving}
-                      className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all disabled:opacity-30"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Add new */}
-        <div className="px-6 py-5 border-t border-white/5 bg-white/[0.01]">
-          <div className="flex gap-3">
-            <input
-              type="text"
-              value={newCat}
-              onChange={e => setNewCat(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleAdd()}
-              placeholder="Nova categoria... (ex: Suporte, RH)"
-              className="flex-1 px-4 py-2.5 bg-surface-base border border-white/5 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/40 transition-all"
-            />
-            <button
-              onClick={handleAdd}
-              disabled={saving || !newCat.trim()}
-              className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white rounded-xl font-black text-sm transition-all"
-            >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              Adicionar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}

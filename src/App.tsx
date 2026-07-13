@@ -11,8 +11,9 @@ import { ReportsView } from './components/ReportsView';
 import { UserManagementView } from './components/UserManagementView';
 import {
   LogOut, Layout, Shield, Briefcase, Users,
-  ClipboardList, BarChart3, Eye, EyeOff, Loader2, AlertCircle, MessageSquare
+  ClipboardList, BarChart3, Eye, EyeOff, Loader2, AlertCircle, MessageSquare, Settings
 } from 'lucide-react';
+import { SettingsModal } from './components/SettingsModal';
 import { SendMessageModal } from './components/SendMessageModal';
 import { NotificationDropdown } from './components/NotificationDropdown';
 import { motion, AnimatePresence } from 'motion/react';
@@ -179,6 +180,7 @@ export default function App() {
   const { user, profile, loading, logout } = useAuth();
   const [currentView, setCurrentView] = useState<ViewType>('kanban');
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Loading state
   if (loading) {
@@ -247,6 +249,17 @@ export default function App() {
               </button>
             )}
 
+            {profile.role === 'admin' && (
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="hidden sm:flex items-center gap-2 px-3 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 rounded-xl transition-all"
+                title="Configurações"
+              >
+                <Settings className="w-4 h-4" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Config</span>
+              </button>
+            )}
+
             <NotificationDropdown />
 
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/[0.03] rounded-xl border border-white/5">
@@ -296,6 +309,11 @@ export default function App() {
       <SendMessageModal 
         isOpen={isMessageModalOpen} 
         onClose={() => setIsMessageModalOpen(false)} 
+      />
+      
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
       />
 
       {/* Footer */}

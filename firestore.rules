@@ -50,5 +50,13 @@ service cloud.firestore {
       // Apenas Administradores podem adicionar/remover categorias
       allow write: if isAdmin();
     }
+
+    // 5. Notificações e Recados
+    match /notifications/{notificationId} {
+      // O usuário pode ler, atualizar e excluir SUAS PRÓPRIAS notificações
+      allow read, update, delete: if isAuth() && resource.data.userId == request.auth.uid;
+      // Qualquer um logado pode criar um recado/notificação para outro usuário
+      allow create: if isAuth();
+    }
   }
 }

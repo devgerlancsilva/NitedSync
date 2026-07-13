@@ -145,16 +145,16 @@ export const SendMessageModal: React.FC<SendMessageModalProps> = ({ isOpen, onCl
             </div>
 
             <div>
-              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
-                Mensagem
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                Mensagem <span className="text-rose-500">*</span>
               </label>
               <textarea
+                required
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Escreva seu recado aqui..."
                 rows={4}
                 className="w-full px-4 py-3 bg-surface-base border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all resize-none"
-                required
               />
             </div>
 

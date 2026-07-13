@@ -61,6 +61,13 @@ export const DailyReportView: React.FC = () => {
     setExporting(true);
     try {
       const element = reportRef.current;
+      
+      const originalBg = element.style.backgroundColor;
+      element.style.backgroundColor = '#0f172a'; // Ensure dark background is captured
+      
+      const hiddenElements = element.querySelectorAll('.export-only');
+      hiddenElements.forEach((el: any) => el.classList.remove('hidden'));
+
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
@@ -68,6 +75,9 @@ export const DailyReportView: React.FC = () => {
         logging: false,
       });
       
+      element.style.backgroundColor = originalBg;
+      hiddenElements.forEach((el: any) => el.classList.add('hidden'));
+
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',

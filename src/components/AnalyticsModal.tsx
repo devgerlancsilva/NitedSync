@@ -7,6 +7,7 @@ import React from 'react';
 import { X, BarChart3, PieChart as PieChartIcon, Users, Target, CheckCircle2, Zap, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Activity } from '../types';
+import { useAuth } from './FirebaseProvider';
 import { 
   BarChart, 
   Bar, 
@@ -27,11 +28,16 @@ interface AnalyticsModalProps {
 }
 
 export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ isOpen, onClose, activities }) => {
+  const { allUsers } = useAuth();
+  
+  const delayedTasks = activities.filter(a => a.dueDate && new Date(a.dueDate) < new Date() && a.status !== 'finalizado');
+
   // Data for Status Distribution
   const statusData = [
-    { name: 'Backlog', value: activities.filter(a => a.status === 'backlog').length, color: '#fb7185' },
-    { name: 'Execução', value: activities.filter(a => a.status === 'em_execucao').length, color: '#fbbf24' },
-    { name: 'Revisão', value: activities.filter(a => a.status === 'em_revisao').length, color: '#818cf8' },
+    { name: 'Atrasadas', value: delayedTasks.length, color: '#f43f5e' },
+    { name: 'Backlog', value: activities.filter(a => a.status === 'backlog' && !delayedTasks.includes(a)).length, color: '#fb7185' },
+    { name: 'Execução', value: activities.filter(a => a.status === 'em_execucao' && !delayedTasks.includes(a)).length, color: '#fbbf24' },
+    { name: 'Revisão', value: activities.filter(a => a.status === 'em_revisao' && !delayedTasks.includes(a)).length, color: '#818cf8' },
     { name: 'Concluído', value: activities.filter(a => a.status === 'finalizado').length, color: '#34d399' },
   ].filter(d => d.value > 0);
 
@@ -46,14 +52,20 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ isOpen, onClose,
 
   const collaboratorCounts: Record<string, number> = {};
   activities.forEach(a => {
-    if (a.assignees && a.assignees.length > 0) {
-      a.assignees.forEach(assignee => {
-        const formatted = formatName(assignee.name);
-        collaboratorCounts[formatted] = (collaboratorCounts[formatted] || 0) + 1;
-      });
-    } else if (a.assigneeName) {
-      const formatted = formatName(a.assigneeName);
+    const processAssignee = (uid: string | null, name: string | null) => {
+      let realName = name;
+      if (uid) {
+        const user = allUsers.find(u => u.uid === uid);
+        if (user && user.name) realName = user.name;
+      }
+      const formatted = formatName(realName);
       collaboratorCounts[formatted] = (collaboratorCounts[formatted] || 0) + 1;
+    };
+
+    if (a.assignees && a.assignees.length > 0) {
+      a.assignees.forEach(assignee => processAssignee(assignee.uid, assignee.name));
+    } else if (a.assigneeName || a.assigneeId) {
+      processAssignee(a.assigneeId, a.assigneeName);
     }
   });
 
@@ -63,7 +75,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ isOpen, onClose,
 
   const totalFinished = activities.filter(a => a.status === 'finalizado').length;
   const completionRate = activities.length > 0 ? Math.round((totalFinished / activities.length) * 100) : 0;
-  const delayedTasks = activities.filter(a => a.dueDate && new Date(a.dueDate) < new Date() && a.status !== 'finalizado').length;
+  const delayedCount = delayedTasks.length;
 
   return (
     <AnimatePresence>
@@ -132,7 +144,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ isOpen, onClose,
                   </div>
                   <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Atrasadas</p>
                   <p className="text-5xl font-black text-rose-400 tracking-tighter">
-                    {delayedTasks}
+                    {delayedCount}
                   </p>
                 </div>
               </div>
