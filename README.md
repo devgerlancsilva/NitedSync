@@ -4,7 +4,7 @@ O **NitedSync** é um sistema moderno de gerenciamento de tarefas e produtividad
 
 ---
 
-## 🚀 Funcionalidades Principais
+## 🚀 Funcionalidades Principais...
 
 * **Story (Kanban):** Painel visual para acompanhamento de tarefas nos status: *Backlog*, *Em Execução*, *Em Revisão* e *Finalizado*. Permite atribuir responsáveis, colaborar com outros membros e acompanhar prazos e checklists.
 * **Daily:** Registro diário (microgerenciamento) onde os colaboradores informam suas ações e realizações do dia, podendo atrelar cada ação a uma tarefa específica do painel Story.
