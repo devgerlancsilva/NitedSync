@@ -411,3 +411,6 @@ export const UserManagementView: React.FC = () => {
           </div>
         </div>
       </Modal>
+    </div>
+  );
+};
