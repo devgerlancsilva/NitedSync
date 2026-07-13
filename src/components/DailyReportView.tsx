@@ -28,7 +28,9 @@ export const DailyReportView: React.FC = () => {
   const [myTodayLog, setMyTodayLog] = useState<DailyEntry | null>(null);
   const reportRef = useRef<HTMLDivElement>(null);
 
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'supervisor';
+  const isAdmin = profile?.role === 'admin';
+  const isSupervisor = profile?.role === 'supervisor';
+  const isLeader = isAdmin || isSupervisor;
   const todayStr = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
@@ -45,7 +47,15 @@ export const DailyReportView: React.FC = () => {
         id: doc.id,
         ...doc.data()
       })) as DailyEntry[];
-      setDailyLogs(logs);
+      let filteredLogs = logs;
+      if (!isAdmin) {
+        if (isSupervisor) {
+          filteredLogs = logs.filter(l => l.groupId === profile?.groupId);
+        } else {
+          filteredLogs = logs.filter(l => l.userId === user.uid);
+        }
+      }
+      setDailyLogs(filteredLogs);
 
       if (selectedDate === todayStr) {
         const myLog = logs.find(l => l.userId === user.uid);
@@ -150,7 +160,7 @@ export const DailyReportView: React.FC = () => {
         <div>
           <h2 className="text-3xl font-black text-white tracking-tight mb-2">Relatório Diário</h2>
           <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">
-            {isAdmin ? 'Acompanhamento de Equipe' : 'O que você está fazendo hoje?'}
+            {isLeader ? 'Acompanhamento de Equipe' : 'O que você está fazendo hoje?'}
           </p>
         </div>
 
@@ -191,7 +201,7 @@ export const DailyReportView: React.FC = () => {
       </div>
 
       <AnimatePresence mode="wait">
-        {!isAdmin && selectedDate === todayStr && (
+        {!isLeader && selectedDate === todayStr && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

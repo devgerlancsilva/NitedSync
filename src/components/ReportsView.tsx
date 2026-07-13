@@ -83,18 +83,7 @@ export const ReportsView: React.FC = () => {
       const actSnap = await getDocs(actQ);
       let acts = actSnap.docs.map(d => ({ id: d.id, ...d.data() } as Activity));
 
-      // Role filtering for activities
-      if (isSupervisor) {
-        acts = acts.filter(a => !a.groupId || a.groupId === profile.groupId);
-      } else if (isColaborador) {
-        acts = acts.filter(a => 
-          a.assignees?.some(x => x.uid === user.uid) ||
-          a.assigneeId === user.uid ||
-          a.createdBy === user.uid ||
-          a.collaborators?.some(c => c.uid === user.uid) ||
-          (a.groupId && a.groupId === profile.groupId)
-        );
-      }
+      // No role filtering for activities: everyone sees all activities in Reports
 
       // Apply status and priority filters
       if (statusFilter !== 'todas') acts = acts.filter(a => a.status === statusFilter);

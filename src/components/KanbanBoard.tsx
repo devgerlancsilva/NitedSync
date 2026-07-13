@@ -264,23 +264,8 @@ export const KanbanBoard: React.FC = () => {
     }
   };
 
-  // Filtering by role
-  const sectorActivities = activities.filter(activity => {
-    // Supervisor: only sees activities from their group
-    if (isSupervisor && activity.groupId && activity.groupId !== profile?.groupId) {
-      const isInvolved = activity.assignees?.some(a => a.uid === user?.uid) || activity.createdBy === user?.uid;
-      if (!isInvolved) return false;
-    }
-    // Colaborador: sees activities assigned to them, created by them, where they're a collaborator, or in their group (to allow picking up tasks)
-    if (isColaborador) {
-      const isAssigned = activity.assignees?.some(a => a.uid === user?.uid) || activity.assigneeId === user?.uid;
-      const isCreator = activity.createdBy === user?.uid;
-      const isCollab = activity.collaborators?.some(c => c.uid === user?.uid);
-      const isSameGroup = activity.groupId === profile?.groupId;
-      if (!isAssigned && !isCreator && !isCollab && !isSameGroup) return false;
-    }
-    return true;
-  });
+  // Everyone sees all activities in Kanban (Story)
+  const sectorActivities = activities;
 
   const filteredActivities = sectorActivities.filter(activity => {
     const searchLower = searchQuery.toLowerCase();
