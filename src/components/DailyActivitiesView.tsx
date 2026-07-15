@@ -48,6 +48,7 @@ export const DailyActivitiesView: React.FC = () => {
   useEffect(() => {
     if (!user || !profile) return;
 
+    let q;
     if (isAdmin) {
       // Admin sees everyone
       q = query(

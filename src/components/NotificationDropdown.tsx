@@ -22,8 +22,7 @@ export const NotificationDropdown: React.FC = () => {
 
     const q = query(
       collection(db, 'notifications'),
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', user.uid)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -31,6 +30,14 @@ export const NotificationDropdown: React.FC = () => {
         id: doc.id,
         ...doc.data()
       })) as AppNotification[];
+      
+      // Sort client-side to prevent Firestore composite index requirements
+      docs.sort((a, b) => {
+        const timeA = a.createdAt?.toMillis?.() || 0;
+        const timeB = b.createdAt?.toMillis?.() || 0;
+        return timeB - timeA;
+      });
+      
       setNotifications(docs);
     }, (error) => {
       console.error("NotificationDropdown: Snapshot error", error);
