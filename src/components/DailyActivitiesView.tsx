@@ -115,7 +115,7 @@ export const DailyActivitiesView: React.FC = () => {
         sector: profile.sector,
         groupId: profile.groupId,
         description: description.trim(),
-        date: todayStr,
+        date: selectedDate, // Use the currently viewed date, not just today
         linkedActivityId,
         linkedActivityTitle,
         createdAt: serverTimestamp(),
@@ -202,19 +202,18 @@ export const DailyActivitiesView: React.FC = () => {
         {isToday ? '📅 Hoje — ' : ''}{formatDate(selectedDate)}
       </p>
 
-      {/* Input form — only for today */}
+      {/* Input form — allow retroactive entries */}
       <AnimatePresence>
-        {isToday && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="mb-8"
-          >
-            <form onSubmit={handleSubmit} className="bg-surface-panel border border-white/5 rounded-3xl p-6 shadow-2xl">
-              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">
-                + Registrar ação realizada hoje
-              </label>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="mb-8"
+        >
+          <form onSubmit={handleSubmit} className="bg-surface-panel border border-white/5 rounded-3xl p-6 shadow-2xl">
+            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">
+              + Registrar ação realizada {isToday ? 'hoje' : 'neste dia'}
+            </label>
               
               <textarea
                 value={description}
@@ -308,7 +307,6 @@ export const DailyActivitiesView: React.FC = () => {
               </AnimatePresence>
             </form>
           </motion.div>
-        )}
       </AnimatePresence>
 
       {/* Entries */}
@@ -327,7 +325,7 @@ export const DailyActivitiesView: React.FC = () => {
             <ClipboardList className="w-10 h-10 text-slate-700 mx-auto mb-4" />
             <p className="text-slate-600 text-sm font-bold uppercase tracking-widest">Nenhum registro</p>
             <p className="text-slate-700 text-xs mt-2">
-              {isToday ? 'Registre sua primeira ação do dia acima.' : 'Ninguém registrou atividades neste dia.'}
+              Ninguém registrou atividades neste dia. Seja o primeiro a registrar acima!
             </p>
           </div>
         ) : (
