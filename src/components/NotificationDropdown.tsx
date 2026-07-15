@@ -143,7 +143,7 @@ export const NotificationDropdown: React.FC = () => {
                           </div>
                         </div>
                         
-                        <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100">
+                        <div className="absolute top-6 right-6 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all scale-100 md:scale-90 md:group-hover:scale-100">
                           {!notification.read && (
                             <button
                               onClick={() => markAsRead(notification.id)}

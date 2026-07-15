@@ -62,7 +62,7 @@ export const SendMessageModal: React.FC<SendMessageModalProps> = ({ isOpen, onCl
     try {
       await addDoc(collection(db, 'notifications'), {
         userId: recipientId,
-        title: `Recado de ${profile.name.split(' ')[0]}`,
+        title: `Recado de ${(profile.name || 'Sistema').split(' ')[0]}`,
         message: message.trim(),
         type: 'mensagem',
         activityId: 'geral',
@@ -137,7 +137,7 @@ export const SendMessageModal: React.FC<SendMessageModalProps> = ({ isOpen, onCl
                   <option value="" disabled>Selecione um colaborador...</option>
                   {users.map(u => (
                     <option key={u.uid} value={u.uid}>
-                      {u.name} ({u.sector})
+                      {u.name} ({u.groupId || u.role})
                     </option>
                   ))}
                 </select>

@@ -19,12 +19,13 @@ interface ActivityCardProps {
   onAssignToMe: (id: string) => void;
   onJoinAsHelper: (id: string) => void;
   onLeaveAsHelper?: (id: string) => void;
+  onUnassignMe?: (id: string) => void;
   onEdit?: (activity: Activity) => void;
   onToggleChecklistItem: (activityId: string, itemId: string) => void;
   onDelete: (id: string) => void;
 }
 
-export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onStatusChange, onAssignToMe, onJoinAsHelper, onLeaveAsHelper, onEdit, onToggleChecklistItem, onDelete }) => {
+export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onStatusChange, onAssignToMe, onJoinAsHelper, onLeaveAsHelper, onUnassignMe, onEdit, onToggleChecklistItem, onDelete }) => {
   const { user, profile } = useAuth();
   const { settings } = useSettings();
   const [isExpanded, setIsExpanded] = React.useState(false);
@@ -319,6 +320,14 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onStatusCh
               className="flex items-center justify-center gap-2 py-2.5 bg-white/[0.03] hover:bg-indigo-500/10 text-slate-300 hover:text-indigo-400 rounded-2xl text-[10px] font-bold uppercase tracking-widest border border-white/5 hover:border-indigo-500/20 transition-all active:scale-95 flex-1"
             >
               Assumir
+            </button>
+          )}
+          {isAssignee && onUnassignMe && (
+            <button
+              onClick={() => onUnassignMe(activity.id)}
+              className="flex items-center justify-center gap-2 py-2.5 bg-white/[0.03] hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 rounded-2xl text-[10px] font-bold uppercase tracking-widest border border-white/5 hover:border-rose-500/20 transition-all active:scale-95 flex-1"
+            >
+              Deixar Atividade
             </button>
           )}
           {!isAssignee && !isCollaborator && (

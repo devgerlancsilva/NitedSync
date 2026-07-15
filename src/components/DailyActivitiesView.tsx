@@ -38,7 +38,7 @@ export const DailyActivitiesView: React.FC = () => {
   const [linkedActivityTitle, setLinkedActivityTitle] = useState<string | null>(null);
   const [showLinkPicker, setShowLinkPicker] = useState(false);
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = new Date().toLocaleDateString('en-CA'); // Gets YYYY-MM-DD in local time
   const isAdmin = profile?.role === 'admin';
   const isSupervisor = profile?.role === 'supervisor';
   const isColaborador = profile?.role === 'colaborador';
@@ -48,34 +48,38 @@ export const DailyActivitiesView: React.FC = () => {
   useEffect(() => {
     if (!user || !profile) return;
 
-    let q;
     if (isAdmin) {
       // Admin sees everyone
       q = query(
         collection(db, 'daily_entries'),
-        where('date', '==', selectedDate),
-        orderBy('createdAt', 'desc')
+        where('date', '==', selectedDate)
       );
     } else if (isSupervisor) {
       // Supervisor sees their group
       q = query(
         collection(db, 'daily_entries'),
         where('date', '==', selectedDate),
-        where('groupId', '==', profile.groupId),
-        orderBy('createdAt', 'desc')
+        where('groupId', '==', profile.groupId)
       );
     } else {
       // Colaborador sees only their own
       q = query(
         collection(db, 'daily_entries'),
         where('date', '==', selectedDate),
-        where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc')
+        where('userId', '==', user.uid)
       );
     }
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as DailyEntry));
+      let data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as DailyEntry));
+      
+      // Sort on client to avoid composite index requirements
+      data.sort((a, b) => {
+        const timeA = a.createdAt?.toMillis?.() || 0;
+        const timeB = b.createdAt?.toMillis?.() || 0;
+        return timeB - timeA;
+      });
+      
       setEntries(data);
     }, (err) => {
       console.error('Error fetching daily entries:', err);
@@ -86,12 +90,17 @@ export const DailyActivitiesView: React.FC = () => {
 
   // Fetch kanban activities for the link picker
   useEffect(() => {
-    if (!user) return;
+    if (!user || !profile) return;
     const q = query(collection(db, 'activities'), orderBy('updatedAt', 'desc'));
     getDocs(q).then(snap => {
-      setActivities(snap.docs.map(d => ({ id: d.id, ...d.data() } as Activity)));
+      let acts = snap.docs.map(d => ({ id: d.id, ...d.data() } as Activity));
+      // Supervisors and Colaboradores só podem linkar com atividades do seu grupo
+      if (!isAdmin && profile?.groupId) {
+        acts = acts.filter(a => a.groupId === profile.groupId);
+      }
+      setActivities(acts);
     });
-  }, [user]);
+  }, [user, profile, isAdmin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

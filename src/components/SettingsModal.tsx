@@ -38,42 +38,43 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   };
 
   const addGroup = () => {
-    const name = prompt('Nome do novo grupo (ex: Desenvolvimento):');
-    const id = prompt('ID do grupo (minúsculo, sem espaços, ex: dev):');
-    if (name && id) {
-      setLocalSettings(s => ({ ...s, groups: [...s.groups, { id, name }] }));
-    }
+    const id = `grupo-${Date.now()}`;
+    setLocalSettings(s => ({ ...s, groups: [...s.groups, { id, name: 'Novo Grupo' }] }));
   };
 
   const removeGroup = (idx: number) => {
     setLocalSettings(s => ({ ...s, groups: s.groups.filter((_, i) => i !== idx) }));
   };
 
-
+  const updateGroup = (idx: number, name: string) => {
+    const updated = [...localSettings.groups];
+    updated[idx] = { ...updated[idx], name };
+    setLocalSettings(s => ({ ...s, groups: updated }));
+  };
 
   const addCategory = () => {
-    const name = prompt('Nome da nova categoria:');
-    if (name) {
-      setLocalSettings(s => ({ ...s, categories: [...s.categories, name] }));
-    }
+    setLocalSettings(s => ({ ...s, categories: [...s.categories, 'Nova Categoria'] }));
   };
 
   const removeCategory = (idx: number) => {
     setLocalSettings(s => ({ ...s, categories: s.categories.filter((_, i) => i !== idx) }));
   };
+
+  const updateCategory = (idx: number, value: string) => {
+    const updated = [...localSettings.categories];
+    updated[idx] = value;
+    setLocalSettings(s => ({ ...s, categories: updated }));
+  };
   
   const addSprint = () => {
-    const name = prompt('Nome da Sprint (ex: Sprint 12):');
-    if (name) {
-      const id = Date.now().toString();
-      setLocalSettings(s => ({ 
-        ...s, 
-        sprints: [...s.sprints, { id, name, startDate: '', endDate: '' }] 
-      }));
-    }
+    const id = Date.now().toString();
+    setLocalSettings(s => ({ 
+      ...s, 
+      sprints: [...s.sprints, { id, name: 'Nova Sprint', startDate: '', endDate: '' }] 
+    }));
   };
 
-  const updateSprint = (idx: number, field: 'startDate' | 'endDate', value: string) => {
+  const updateSprint = (idx: number, field: 'name' | 'startDate' | 'endDate', value: string) => {
     const updated = [...localSettings.sprints];
     updated[idx] = { ...updated[idx], [field]: value };
     setLocalSettings(s => ({ ...s, sprints: updated }));
@@ -154,9 +155,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                     <div className="grid grid-cols-2 gap-4">
                       {localSettings.groups.map((g, idx) => (
                         <div key={idx} className="flex items-center justify-between p-4 bg-surface-base border border-white/5 rounded-2xl">
-                          <div>
-                            <p className="text-sm font-bold text-white">{g.name}</p>
-                            <p className="text-xs text-slate-500">ID: {g.id}</p>
+                          <div className="flex-1 mr-4">
+                            <input
+                              type="text"
+                              value={g.name}
+                              onChange={(e) => updateGroup(idx, e.target.value)}
+                              placeholder="Nome do grupo"
+                              className="w-full bg-transparent border-b border-transparent hover:border-white/20 focus:border-indigo-500 focus:outline-none text-sm font-bold text-white transition-colors pb-1"
+                            />
+                            <p className="text-xs text-slate-500 mt-1">ID: {g.id}</p>
                           </div>
                           <button onClick={() => removeGroup(idx)} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                         </div>
@@ -177,7 +184,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                     <div className="grid grid-cols-3 gap-4">
                       {localSettings.categories.map((c, idx) => (
                         <div key={idx} className="flex items-center justify-between p-4 bg-surface-base border border-white/5 rounded-2xl">
-                          <p className="text-sm font-bold text-white">{c}</p>
+                          <input
+                            type="text"
+                            value={c}
+                            onChange={(e) => updateCategory(idx, e.target.value)}
+                            placeholder="Nome da categoria"
+                            className="flex-1 bg-transparent border-b border-transparent hover:border-white/20 focus:border-indigo-500 focus:outline-none text-sm font-bold text-white transition-colors pb-1 mr-2"
+                          />
                           <button onClick={() => removeCategory(idx)} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       ))}
@@ -197,7 +210,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                       {localSettings.sprints.map((s, idx) => (
                         <div key={idx} className="flex items-center gap-4 p-4 bg-surface-base border border-white/5 rounded-2xl">
                           <div className="flex-1">
-                            <p className="text-sm font-bold text-white mb-2">{s.name}</p>
+                            <input
+                              type="text"
+                              value={s.name}
+                              onChange={(e) => updateSprint(idx, 'name', e.target.value)}
+                              placeholder="Nome da Sprint"
+                              className="w-full bg-transparent border-b border-transparent hover:border-white/20 focus:border-indigo-500 focus:outline-none text-sm font-bold text-white mb-3 pb-1 transition-colors"
+                            />
                             <div className="flex gap-4">
                               <div className="space-y-1">
                                 <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Início</label>

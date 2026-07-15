@@ -43,11 +43,24 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ isOpen, onClose,
 
   const formatName = (name: string | null) => {
     if (!name) return 'Desconhecido';
-    if (name.includes('@')) {
-      const prefix = name.split('@')[0];
-      return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+    
+    let cleanName = name.trim();
+    if (cleanName.includes('@')) {
+      cleanName = cleanName.split('@')[0];
     }
-    return name.split(' ')[0];
+    
+    if (!cleanName.includes(' ') && cleanName.includes('.')) {
+      cleanName = cleanName.split('.').join(' ');
+    }
+    
+    const parts = cleanName.split(/\s+/);
+    if (parts.length > 1) {
+      const first = parts[0];
+      const last = parts[parts.length - 1];
+      return `${first.charAt(0).toUpperCase() + first.slice(1).toLowerCase()} ${last.charAt(0).toUpperCase() + last.slice(1).toLowerCase()}`;
+    }
+    
+    return cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase();
   };
 
   const collaboratorCounts: Record<string, number> = {};

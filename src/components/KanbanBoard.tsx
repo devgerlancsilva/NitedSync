@@ -264,8 +264,31 @@ export const KanbanBoard: React.FC = () => {
     }
   };
 
-  // Everyone sees all activities in Kanban (Story)
-  const sectorActivities = activities;
+  const handleUnassignMe = async (id: string) => {
+    if (!user || !profile) return;
+    const activity = activities.find(a => a.id === id);
+    if (!activity) return;
+
+    try {
+      const newAssignees = (activity.assignees || []).filter(a => a.uid !== user.uid);
+      const newAssigneeId = newAssignees.length > 0 ? newAssignees[0].uid : null;
+      const newAssigneeName = newAssignees.length > 0 ? newAssignees[0].name : null;
+
+      await updateDoc(doc(db, 'activities', id), {
+        assigneeId: newAssigneeId,
+        assigneeName: newAssigneeName,
+        assignees: newAssignees,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `activities/${id}`);
+    }
+  };
+
+  // Admins see all, others see only their group
+  const sectorActivities = isAdmin 
+    ? activities 
+    : activities.filter(a => a.groupId === profile?.groupId);
 
   const filteredActivities = sectorActivities.filter(activity => {
     const searchLower = searchQuery.toLowerCase();
@@ -450,16 +473,17 @@ export const KanbanBoard: React.FC = () => {
                               {...provided.dragHandleProps}
                               className={cn(snapshot.isDragging && "z-50")}
                             >
-                              <ActivityCard
-                                activity={activity}
-                                onStatusChange={handleStatusChange}
-                                onAssignToMe={handleAssignToMe}
-                                onJoinAsHelper={handleJoinAsHelper}
-                                onLeaveAsHelper={handleLeaveAsHelper}
-                                onEdit={(a) => { setEditingActivity(a); setIsModalOpen(true); }}
-                                onToggleChecklistItem={handleToggleChecklistItem}
-                                onDelete={handleDeleteActivity}
-                              />
+                                <ActivityCard
+                                  activity={activity}
+                                  onStatusChange={handleStatusChange}
+                                  onAssignToMe={handleAssignToMe}
+                                  onJoinAsHelper={handleJoinAsHelper}
+                                  onLeaveAsHelper={handleLeaveAsHelper}
+                                  onUnassignMe={handleUnassignMe}
+                                  onEdit={(a) => { setEditingActivity(a); setIsModalOpen(true); }}
+                                  onToggleChecklistItem={handleToggleChecklistItem}
+                                  onDelete={handleDeleteActivity}
+                                />
                             </div>
                           )}
                         </DraggableAny>

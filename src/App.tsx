@@ -16,6 +16,7 @@ import {
 import { SettingsModal } from './components/SettingsModal';
 import { SendMessageModal } from './components/SendMessageModal';
 import { NotificationDropdown } from './components/NotificationDropdown';
+import { ProfileModal } from './components/ProfileModal';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 
@@ -181,6 +182,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('kanban');
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   // Loading state
   if (loading) {
@@ -262,7 +264,10 @@ export default function App() {
 
             <NotificationDropdown />
 
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/[0.03] rounded-xl border border-white/5">
+            <div 
+              onClick={() => setIsProfileOpen(true)}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/[0.03] rounded-xl border border-white/5 cursor-pointer hover:bg-white/5 transition-colors"
+            >
               <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center", roleConf.bg)}>
                 <RoleIcon className={cn("w-3.5 h-3.5", roleConf.color)} />
               </div>
@@ -314,6 +319,11 @@ export default function App() {
       <SettingsModal 
         isOpen={isSettingsOpen} 
         onClose={() => setIsSettingsOpen(false)} 
+      />
+
+      <ProfileModal 
+        isOpen={isProfileOpen} 
+        onClose={() => setIsProfileOpen(false)} 
       />
 
       {/* Footer */}
